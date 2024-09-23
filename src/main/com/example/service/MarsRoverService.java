@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 public class MarsRoverService {
 
-    public List<String> processRovers(File file) throws FileNotFoundException, InputMismatchException {
+    public List<String> processRovers(File file) throws FileNotFoundException, InputMismatchException, IllegalArgumentException {
         List<String> roverResults = new ArrayList<>();
         Scanner scanner = new Scanner(file);
 
