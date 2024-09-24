@@ -1,6 +1,6 @@
-package main.com.example;
+package com.example;
 
-import main.com.example.service.MarsRoverService;
+import com.example.service.MarsRoverService;
 
 import java.io.File;
 import java.io.FileNotFoundException;

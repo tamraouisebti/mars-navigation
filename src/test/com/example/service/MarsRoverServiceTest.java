@@ -1,6 +1,5 @@
 package com.example.service;
 
-import main.com.example.service.MarsRoverService;
 import org.junit.Test;
 
 import java.io.File;

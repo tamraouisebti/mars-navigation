@@ -1,4 +1,4 @@
-package main.com.example.domain;
+package com.example.domain;
 
 public class Rover {
     private int x;

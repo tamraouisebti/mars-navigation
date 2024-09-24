@@ -1,6 +1,5 @@
 package com.example.domain;
 
-import main.com.example.domain.Plateau;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

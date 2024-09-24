@@ -1,7 +1,7 @@
-package main.com.example.service;
+package com.example.service;
 
-import main.com.example.domain.Rover;
-import main.com.example.domain.Plateau;
+import com.example.domain.Plateau;
+import com.example.domain.Rover;
 
 import java.io.File;
 import java.io.FileNotFoundException;
