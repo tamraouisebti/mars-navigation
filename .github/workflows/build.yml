@@ -1,0 +1,77 @@
+name: Build, Test, and SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build, Test, and Analyze on SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Java 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Step 3: Download JUnit and Hamcrest libraries
+      - name: Download JUnit, Hamcrest and jacoco JARs
+        run: |
+          mkdir -p libs
+          curl -L -o libs/junit-4.13.2.jar https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar
+          curl -L -o libs/hamcrest-core-1.3.jar https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+          curl -L -o libs/jacocoagent.jar https://repo1.maven.org/maven2/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7-runtime.jar
+
+      # Step 4: Compile Java code and test classes
+      - name: Compile Java code and JUnit tests
+        run: |
+          javac -d out -cp libs/junit-4.13.2.jar:libs/hamcrest-core-1.3.jar $(find src/main -name "*.java") $(find src/test -name "*.java")
+
+      # Step 5: Run all JUnit tests in src/test with JaCoCo coverage
+      - name: Run JUnit tests with coverage
+        run: |
+          echo "Running JUnit tests..."
+          classes=$(find out -name "*Test.class" | sed 's|out/||' | sed 's|/|.|g' | sed 's|.class||')
+          echo "Found test classes:"
+          echo $classes
+          java -javaagent:libs/jacocoagent.jar=destfile=jacoco.exec -cp out:libs/junit-4.13.2.jar:libs/hamcrest-core-1.3.jar \
+          org.junit.runner.JUnitCore $classes
+
+      # Step 6: Generate JaCoCo XML report
+      - name: Generate JaCoCo XML report
+        run: |
+            mkdir -p target/site/jacoco  # Ensure the directory exists
+            curl -L -o jacococli.jar https://repo1.maven.org/maven2/org/jacoco/org.jacoco.cli/0.8.7/org.jacoco.cli-0.8.7-nodeps.jar
+            java -jar jacococli.jar report jacoco.exec --classfiles out --sourcefiles src --html target/site/jacoco --xml target/site/jacoco/jacoco.xml
+
+      # Step 7: Run SonarCloud Scan
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # SonarCloud authentication token
+
+      # Step 8: Package the application into a JAR file
+      - name: Package JAR
+        run: |
+          jar cfe mars-navigation.jar com.example.MarsRoverApp -C out .
+
+      # Step 9: Create a GitHub Release and upload the JAR
+      - name: Create Release and Upload JAR
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.0  # Update this to your versioning strategy
+          files: mars-navigation.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
+
